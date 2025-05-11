@@ -10,6 +10,7 @@ use warp::{
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
+// #[derive(Clone, Serialize)]
 #[derive(Clone)]
 struct Store {
     questions: HashMap<QuestionId, Question>,
@@ -40,22 +41,6 @@ struct Question {
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
 struct QuestionId(String);
 
-impl Question {
-    fn new(
-        id: QuestionId, 
-        title: String, 
-        content: String, 
-        tags: Option<Vec<String>>
-    ) -> Self {
-        Question {
-            id,
-            title,
-            content,
-            tags,
-        }
-    }
-}
-
 impl std::fmt::Display for Question {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -72,8 +57,24 @@ impl std::fmt::Display for QuestionId {
     }
 }
 
-async fn get_questions(store: Store) -> Result<impl warp::Reply, warp::Rejection> {
+async fn get_questions(
+    params: HashMap<String, String>,
+    store: Store,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    println!("{:?}", params);
+
+    let mut start = 0;
+
+    if let Some(n) = params.get("start") {
+        start = n.parse::<usize>().expect("Failed to parse start!");
+    }
+
+    println!("{}", start);
+    panic!("aaaaaaaaaaaahhhh");
+
     let res: Vec<Question> = store.questions.values().cloned().collect();
+    // To get whole Struct
+    // let res = store;
     Ok(warp::reply::json(&res))
 }
 
@@ -107,6 +108,7 @@ async fn main() {
     let get_questions = warp::get()    
         .and(warp::path("questions"))
         .and(warp::path::end())
+        .and(warp::query())
         .and(store_filter)
         .and_then(get_questions)
         .recover(return_error);
@@ -114,6 +116,6 @@ async fn main() {
     let routes = get_questions.with(cors);
 
     warp::serve(routes)
-        .run(([192, 168, 30, 3], 3030))
+        .run(([127, 0, 0, 1], 3030))
         .await;
 }
