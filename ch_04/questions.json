@@ -28,5 +28,11 @@
         "title": "ChatGPT is a 24/7 available computer science professor",
         "content": "I use it to ask questions about computer science concepts.",
         "tags": ["general", "tech"]
+    },
+	"6" : {
+        "id": "6",
+        "title": "new goals",
+        "content": "You have only one chance! Take your time and choose wisely.",
+        "tags": ["general", "tech", "life-goals", "programmer", "bit flipping"]
     }
 }

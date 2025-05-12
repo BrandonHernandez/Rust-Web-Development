@@ -10,16 +10,19 @@ use warp::{
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 
+use std::sync::Arc;
+use tokio::sync::RwLock;
+
 // #[derive(Clone, Serialize)]
 #[derive(Clone)]
 struct Store {
-    questions: HashMap<QuestionId, Question>,
+    questions: Arc<RwLock<HashMap<QuestionId, Question>>>,
 }
 
 impl Store {
     fn new() -> Self {
         Store {
-            questions: Self::init(),
+            questions: Arc::new(RwLock::new(Self::init())),
         }
     }
 
@@ -64,14 +67,27 @@ async fn get_questions(
 ) -> Result<impl warp::Reply, warp::Rejection> {
    
     if !params.is_empty() {
-        let res: Vec<Question> = store.questions.values().cloned().collect();
-        let pagination = extract_pagination(params)?;
+        let mut pagination = extract_pagination(params)?;
+        
+        let res: Vec<Question> = store
+            .questions
+            .read()
+            .await
+            .values()
+            .cloned()
+            .collect();
+                
+        pagination = pagination.saturate(res.len());
         let res = &res[pagination.start..pagination.end];
         Ok(warp::reply::json(&res))
     } else {
-        let res: Vec<Question> = store.questions.values().cloned().collect();
-        // To get the whole Struct
-        // let res = store;
+        let res: Vec<Question> = store
+            .questions
+            .read()
+            .await
+            .values()
+            .cloned()
+            .collect();
         Ok(warp::reply::json(&res))
     }
 
@@ -134,8 +150,13 @@ impl Pagination {
         }
         self
     }
-    fn verify_range(mut self, max_len: usize) -> () {
-        
+    fn saturate(mut self, max_len: usize) -> Self {
+        if self.end > max_len {
+            println!("Saturating! Level: {}", max_len);
+            self.end = max_len;
+            println!("Start: {} End: {}", self.start, self.end);
+        }
+        self
     }
 }
 
