@@ -93,6 +93,25 @@ async fn get_questions(
 
 }
 
+async fn add_question(
+    store: Store,
+    question: Question,
+) -> Result<impl warp::Reply, warp::Rejection> {
+    store
+    .questions
+    .write()
+    .await
+    .insert(
+        question.id.clone(), 
+        question,
+    );
+
+    Ok(warp::Reply::with_status(
+        "Question added!",
+        StatusCode::OK,
+    ))
+}
+
 async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
     if let Some(error) = r.find::<Error>() {
         Ok(warp::reply::with_status(
