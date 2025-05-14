@@ -5,7 +5,8 @@ use warp::{
     reject::Reject, 
     Rejection, 
     Reply, 
-    http::StatusCode
+    http::StatusCode,
+    body::BodyDeserializeError,
 };
 use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
@@ -61,11 +62,7 @@ impl std::fmt::Display for QuestionId {
 }
 
 // Route handler!
-async fn get_questions(
-    params: HashMap<String, String>,
-    store: Store,
-) -> Result<impl warp::Reply, warp::Rejection> {
-   
+async fn get_questions(params: HashMap<String, String>, store: Store) -> Result<impl warp::Reply, warp::Rejection> {
     if !params.is_empty() {
         let mut pagination = extract_pagination(params)?;
         
@@ -93,10 +90,7 @@ async fn get_questions(
 
 }
 
-async fn add_question(
-    store: Store,
-    question: Question,
-) -> Result<impl warp::Reply, warp::Rejection> {
+async fn add_question(store: Store, question: Question) -> Result<impl warp::Reply, warp::Rejection> {
     store
     .questions
     .write()
@@ -106,8 +100,20 @@ async fn add_question(
         question,
     );
 
-    Ok(warp::Reply::with_status(
+    Ok(warp::reply::with_status(
         "Question added!",
+        StatusCode::OK,
+    ))
+}
+
+async fn update_question(id: String, store: Store, question: Question) -> Result<impl warp::Reply, warp::Rejection> {
+    match store.questions.write().await.get_mut(&QuestionId(id)) {
+        Some(q) => *q = question,
+        None => return Err(warp::reject::custom(Error::QuestionNotFound)),
+    }
+
+    Ok(warp::reply::with_status(
+        "Question updated!",
         StatusCode::OK,
     ))
 }
@@ -123,9 +129,15 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
             error.to_string(),
             StatusCode::FORBIDDEN,
         ))
-    } else {
+    } else if let Some(error) = r.find::<BodyDeserializeError>() {
         Ok(warp::reply::with_status(
-            "Route not found!".to_string(),
+            error.to_string(),
+            StatusCode::BAD_REQUEST,
+        ))
+    } 
+    else {
+        Ok(warp::reply::with_status(
+            format!("{:?}", r),
             StatusCode::NOT_FOUND,
         ))
     }
@@ -135,6 +147,7 @@ async fn return_error(r: Rejection) -> Result<impl Reply, Rejection> {
 enum Error {
     ParseError(std::num::ParseIntError),
     MissingParameters,
+    QuestionNotFound,
 }
 
 impl std::fmt::Display for Error {
@@ -145,6 +158,9 @@ impl std::fmt::Display for Error {
             },
             Error::MissingParameters => {
                 write!(f, "Missing parameter")
+            },
+            Error::QuestionNotFound => {
+                write!(f, "Question not found")
             },
         }
     }
@@ -217,14 +233,32 @@ async fn main() {
 
     let get_questions = warp::get()    
         .and(warp::path("questions"))   // http://localhost:3030/questions
-        // .and(warp::path("another"))   // http://localhost:3030/questions/another
+        // .and(warp::path("another"))  // http://localhost:3030/questions/another
         .and(warp::path::end())         // marks the end of the path
         .and(warp::query())             // this gets the url parameters. Sets first param.
-        .and(store_filter)              // Is this a call to a closure? Did it capture the `store` variable? Sets second param.
-        .and_then(get_questions)        // get_questions receives 2 params.    
-        .recover(return_error);         // if get_questions fails, I think...
+        .and(store_filter.clone())      // Is this a call to a closure? Did it capture the `store` variable? Sets second param.
+        .and_then(get_questions);       // get_questions receives 2 params.    
+    
+    let add_question = warp::post()
+        .and(warp::path("questions"))
+        .and(warp::path::end())
+        .and(store_filter.clone())      // first param: Store
+        .and(warp::body::json())        // second param: Question
+        .and_then(add_question);
 
-    let routes = get_questions.with(cors);
+    let update_question = warp::put()
+        .and(warp::path("questions"))
+        .and(warp::path::param::<String>())     // first param: Id
+        .and(warp::path::end())
+        .and(store_filter.clone())              // second param: Store
+        .and(warp::body::json())                // third param: Question
+        .and_then(update_question);
+
+    let routes = add_question
+        .or(get_questions)
+        .or(update_question)
+        .with(cors)
+        .recover(return_error);
 
     warp::serve(routes)
         .run(([127, 0, 0, 1], 3030))
