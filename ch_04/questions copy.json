@@ -1,0 +1,44 @@
+{
+    "1" : {
+        "id": "1",
+        "title": "How?",
+        "content": "Please help!",
+        "tags": ["general"]
+    },
+	"2" : {
+        "id": "2",
+        "title": "How?",
+        "content": "I need help with my Arduino",
+        "tags": ["general", "tech"]
+    },
+	"3" : {
+        "id": "3",
+        "title": "Low-level programming",
+        "content": "What are the best books for this?",
+        "tags": ["general", "tech", "computers"]
+    },
+	"4" : {
+        "id": "4",
+        "title": "ChatGPT",
+        "content": "What is your opinion on using LLMs to code?",
+        "tags": ["general", "tech", "LLM", "AI"]
+    },
+	"5" : {
+        "id": "5",
+        "title": "ChatGPT is a 24/7 available computer science professor",
+        "content": "I use it to ask questions about computer science concepts.",
+        "tags": ["general", "tech"]
+    },
+	"6" : {
+        "id": "6",
+        "title": "new goals",
+        "content": "You have only one chance! Take your time and choose wisely.",
+        "tags": ["general", "tech", "life-goals", "programmer", "bit flipping"]
+    },
+	"888" : {
+        "id": "0",
+        "title": "alien",
+        "content": "xx/x//a",
+        "tags": ["alive"]
+    }
+}
