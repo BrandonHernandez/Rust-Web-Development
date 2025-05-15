@@ -30,9 +30,15 @@
         "tags": ["general", "tech"]
     },
 	"6" : {
-        "id": "122",
+        "id": "6",
         "title": "new goals",
         "content": "You have only one chance! Take your time and choose wisely.",
         "tags": ["general", "tech", "life-goals", "programmer", "bit flipping"]
+    },
+	"888" : {
+        "id": "0",
+        "title": "alien",
+        "content": "xx/x//a",
+        "tags": ["alive"]
     }
 }
