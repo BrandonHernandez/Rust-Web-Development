@@ -81,6 +81,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 name = "ch_05"
 version = "0.1.0"
 dependencies = [
+ "handle-errors",
  "serde",
  "serde_json",
  "tokio",
@@ -249,6 +250,13 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
+]
+
+[[package]]
+name = "handle-errors"
+version = "0.1.0"
+dependencies = [
+ "warp",
 ]
 
 [[package]]
