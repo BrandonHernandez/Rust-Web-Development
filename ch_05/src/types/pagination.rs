@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use handle_errors::Error;
+use std::collections::HashMap;
 
 /// Pagination struct that is getting extracted
 /// from query params
@@ -15,9 +15,10 @@ pub struct Pagination {
 impl Pagination {
     pub fn sanitize(mut self) -> Self {
         if self.start > self.end {
-            let saved_start = self.start;
-            self.start = self.end;
-            self.end = saved_start;
+            std::mem::swap(&mut self.start, &mut self.end);
+            // let saved_start = self.start;
+            // self.start = self.end;
+            // self.end = saved_start;
         }
         self
     }
@@ -36,30 +37,38 @@ impl Pagination {
 /// GET requests to this route can have a pagination attached so we just
 /// return the questions we need
 /// `\questions?start=1&end=10`
-pub fn extract_pagination(params: HashMap<String, String>) 
-    -> Result<Pagination, Error> {
-        // Could be improved in the future
-        if params.contains_key("start") && params.contains_key("end") {
-            let mut pagination = Pagination {
-                // Takes the "start" parameter in the query
-                // and tries to convert it to a number
-                start: params
-                    .get("start")
-                    .unwrap()
-                    .parse::<usize>()
-                    .map_err(Error::ParseError)?,
-                // Takes the "end" parameter in the query
-                // and tries to convert it to a number
-                end: params
-                    .get("end")
-                    .unwrap()
-                    .parse::<usize>()
-                    .map_err(Error::ParseError)?,
-            };
-            // println!("{:?}", pagination);
-            pagination = pagination.sanitize();
-            // println!("{:?}", pagination);
-            return Ok(pagination);
-        }
-        Err(Error::MissingParameters)
+/// # Example usage
+/// ```rust
+/// let mut query = HashMap::new();
+/// query.insert("start".to_string(), "1".to_string());
+/// query.insert("end".to_string(), "10".to_string());
+/// let p = types::pagination::extract_pagination(query).unwrap();
+/// assert_eq!(p.start, 1);
+/// assert_eq!(p.end, 10);
+/// ```
+pub fn extract_pagination(params: HashMap<String, String>) -> Result<Pagination, Error> {
+    // Could be improved in the future
+    if params.contains_key("start") && params.contains_key("end") {
+        let mut pagination = Pagination {
+            // Takes the "start" parameter in the query
+            // and tries to convert it to a number
+            start: params
+                .get("start")
+                .unwrap()
+                .parse::<usize>()
+                .map_err(Error::ParseError)?,
+            // Takes the "end" parameter in the query
+            // and tries to convert it to a number
+            end: params
+                .get("end")
+                .unwrap()
+                .parse::<usize>()
+                .map_err(Error::ParseError)?,
+        };
+        // println!("{:?}", pagination);
+        pagination = pagination.sanitize();
+        // println!("{:?}", pagination);
+        return Ok(pagination);
+    }
+    Err(Error::MissingParameters)
 }

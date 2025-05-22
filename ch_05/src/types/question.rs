@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Question {
@@ -14,8 +14,8 @@ pub struct QuestionId(pub String);
 impl std::fmt::Display for Question {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, 
-            "{}, title: {}, content: {}, tags: {:?}", 
+            f,
+            "{}, title: {}, content: {}, tags: {:?}",
             self.id, self.title, self.content, self.tags
         )
     }

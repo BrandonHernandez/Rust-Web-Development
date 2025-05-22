@@ -1,6 +1,6 @@
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use std::collections::HashMap;
 
 use crate::types::{
     answer::{Answer, AnswerId},
