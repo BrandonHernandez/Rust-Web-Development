@@ -25,7 +25,7 @@ async fn main() {
     log::warn!("This is a warning!");
 
     let log = warp::log::custom(|info| {
-        eprintln!(
+        log::info!(
             "{} {} {} {:?} from {} with {:?}",
             info.method(),
             info.path(),
@@ -39,10 +39,17 @@ async fn main() {
     let store = Store::new();
     let store_filter = warp::any().map(move || store.clone());
 
+    let id_filter = warp::any().map(|| uuid::Uuid::new_v4().to_string());
+
     let cors = warp::cors()
         .allow_any_origin()
         .allow_header("content-type")
-        .allow_methods(&[Method::PUT, Method::DELETE]);
+        .allow_methods(&[
+            Method::PUT, 
+            Method::DELETE,
+            Method::GET,
+            Method::POST,
+    ]);
 
     let get_questions = warp::get()
         .and(warp::path("questions")) // http://localhost:3030/questions
@@ -50,6 +57,7 @@ async fn main() {
         .and(warp::path::end()) // marks the end of the path
         .and(warp::query()) // this gets the url parameters. Sets first param.
         .and(store_filter.clone()) // Is this a call to a closure? Did it capture the `store` variable? Sets second param.
+        .and(id_filter)
         .and_then(get_questions); // get_questions receives 2 params.    
 
     let get_one_question = warp::get()
